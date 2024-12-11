@@ -3,14 +3,16 @@ const redisClient = require('../utils/redis');
 const dbClient = require('../utils/db');
 
 class AppController {
-  static async getStatus(req, res) {
-    res.status(200).json({ redis: redisClient.isAlive(), db: dbClient.isAlive() });
+  static getStatus(req, res) {
+    const rL = redisClient.isAlive();
+    const dbL = dbClient.isAlive();
+    res.status(200).json({ redis: rL, db: dbL });
   }
 
   static async getStats(req, res) {
-    const usersCount = await dbClient.nbUsers();
-    const filesCount = await dbClient.nbFiles();
-    res.status(200).json({ users: usersCount, files: filesCount });
+    const totalUsers = await dbClient.nbUsers();
+    const totalFiles = await dbClient.nbFiles();
+    res.status(200).json({ users: totalUsers, files: totalFiles });
   }
 }
 
