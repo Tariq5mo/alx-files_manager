@@ -1,32 +1,32 @@
 import { MongoClient } from 'mongodb';
 
-class DataClient {
+class DBHandler {
   constructor() {
-    const dbHost = process.env.DB_HOST || 'localhost';
-    const dbPort = process.env.DB_PORT || 27017;
-    const dbName = process.env.DB_DATABASE || 'files_manager';
-    const connectionString = `mongodb://${dbHost}:${dbPort}`;
+    const host = process.env.DB_HOST || 'localhost';
+    const port = process.env.DB_PORT || 27017;
+    const name = process.env.DB_DATABASE || 'files_manager';
+    const uri = `mongodb://${host}:${port}`;
 
-    MongoClient.connect(connectionString, { useUnifiedTopology: true }, (connectionError, clientInstance) => {
-      if (connectionError) {
-        this.databaseClient = false;
+    MongoClient.connect(uri, { useUnifiedTopology: true }, (err, client) => {
+      if (err) {
+        this.db = false;
       } else {
-        this.databaseClient = clientInstance.db(dbName);
+        this.db = client.db(name);
       }
     });
   }
 
-  isOperational() {
-    return !!this.databaseClient;
+  isReady() {
+    return !!this.db;
   }
 
-  async countUsers() {
-    return this.databaseClient.collection('users').countDocuments();
+  async userCount() {
+    return this.db.collection('users').countDocuments();
   }
 
-  async countFiles() {
-    return this.databaseClient.collection('files').countDocuments();
+  async fileCount() {
+    return this.db.collection('files').countDocuments();
   }
 }
 
-export default new DataClient();
+export default new DBHandler();
