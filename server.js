@@ -1,5 +1,5 @@
-import express from 'express';
-import routes from './routes/index';
+const express = require('express');
+const routes = require('./routes/index');
 
 const app = express();
 app.use(express.json());
@@ -10,3 +10,5 @@ app.use('/', routes);
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+module.exports = app; // Export for testing

@@ -1,11 +1,15 @@
-import dbClient from '../utils/db';
-import redisClient from '../utils/redis';
+const redisClient = require('../utils/redis');
+const dbClient = require('../utils/db');
 
 class AppController {
   static getStatus(req, res) {
-    const redisLive = redisClient.isAlive();
-    const dbLive = dbClient.isAlive();
-    res.status(200).json({ redis: redisLive, db: dbLive });
+    try {
+      const redisAlive = redisClient.isAlive();
+      const dbAlive = dbClient.isAlive();
+      return res.status(200).json({ redis: redisAlive, db: dbAlive });
+    } catch (error) {
+      return res.status(500).json({ error: 'Server error' });
+    }
   }
 
   static async getStats(req, res) {
@@ -15,4 +19,4 @@ class AppController {
   }
 }
 
-export default AppController;
+module.exports = AppController;
