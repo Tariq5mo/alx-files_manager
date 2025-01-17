@@ -1,32 +1,58 @@
 import { MongoClient } from 'mongodb';
 
 class DBClient {
+  /**
+   * Initializes a new instance of DBClient
+   */
   constructor() {
-    const host = process.env.DB_HOST || 'localhost';
-    const port = process.env.DB_PORT || 27017;
-    const database = process.env.DB_DATABASE || 'files_manager';
-    const uri = `mongodb://${host}:${port}`;
-
-    MongoClient.connect(uri, { useUnifiedTopology: true }, (err, client) => {
-      if (err) {
-        console.error('MongoDB connection error:', err);
-        this.db = null;
-      } else {
-        this.db = client.db(database);
-      }
+    const HOST = process.env.DB_HOST || 'localhost';
+    const PORT = process.env.BD_PORT || 27017;
+    const DATABASE = process.env.DB_DATABASE || 'files_manager';
+    const URI = `mongodb://${HOST}:${PORT}`;
+    this.mongoClient = new MongoClient(URI, { useUnifiedTopology: true });
+    this.mongoClient.connect((error) => {
+      if (!error) this.db = this.mongoClient.db(DATABASE);
     });
   }
 
+  /**
+   * Check mongodb client's connection status
+   * @returns {boolean} mongoClient connection status
+   */
   isAlive() {
-    return !!this.db;
+    return this.mongoClient.isConnected();
+  }
+
+  /**
+   * Retrieves specified collection from database
+   * @returns {import("mongodb").Collection} - users collection object
+   */
+  getCollection(collectionName) {
+    const collection = this.db.collection(collectionName);
+    return collection;
   }
 
   async nbUsers() {
-    return this.db.collection('users').countDocuments();
+    const usersCollection = this.getCollection('users');
+    const numberOfUsers = await usersCollection.countDocuments();
+    return numberOfUsers;
   }
 
+  /**
+   * Queries 'files' collection
+   * @returns {number} - number of documents in files collection
+   */
   async nbFiles() {
-    return this.db.collection('files').countDocuments();
+    const filesCollection = this.getCollection('files');
+    const numberOfFiles = await filesCollection.countDocuments();
+    return numberOfFiles;
+  }
+
+  /**
+   * Closes connection to mongodb client
+   */
+  async close() {
+    await this.mongoClient.close();
   }
 }
 

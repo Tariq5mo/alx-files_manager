@@ -8,22 +8,35 @@ class UsersController {
   static async postNew(req, res) {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: `Missing ${!email ? 'email' : 'password'}` });
+    if (!email) {
+      return res.status(400).json({ error: 'Missing email' });
+    }
+    if (!password) {
+      return res.status(400).json({ error: 'Missing password' });
     }
 
-    const userExists = await dbClient.dbClient.collection('users').findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ error: 'Already exist' });
+    try {
+      const usersCollection = dbClient.db.collection('users');
+      const existingUser = await usersCollection.findOne({ email });
+      
+      if (existingUser) {
+        return res.status(400).json({ error: 'Already exist' });
+      }
+
+      const hashedPassword = sha1(password);
+      const result = await usersCollection.insertOne({
+        email,
+        password: hashedPassword,
+      });
+
+      return res.status(201).json({
+        id: result.insertedId,
+        email,
+      });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Server error' });
     }
-
-    const hashedPassword = sha1(password);
-    const newUser = { email, password: hashedPassword };
-
-    const result = await dbClient.dbClient.collection('users').insertOne(newUser);
-    userQueue.add({ userId: result.insertedId });
-
-    return res.status(201).json({ id: result.insertedId, email });
   }
 
   static async getMe(req, res) {
